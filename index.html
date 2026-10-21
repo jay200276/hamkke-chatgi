@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>함께찾기</title>
+<link rel="icon" href="assets/logo.png">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800;900&display=swap">
+<style>
+/* Layout: 게임 로비(대기 화면). 16:9 한 장면 안에 위쪽 상태 바, 왼쪽 메뉴, 가운데 우체부, 오른쪽 '오늘의 이웃', 아래 큰 시작 버튼 두 개. 좁은 화면에서는 위에서 아래로 쌓음. */
+:root{
+  --navy:#1f3a5f; --navy-2:#283150; --night:#1c2236;
+  --lamp:#f5c243; --red:#d4472d; --blue:#2f63b8; --paper:#fbf3e3; --paper-2:#efe4cf; --ink:#26221e; --muted:#6d6357;
+  --font:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  color-scheme:light;
+}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:var(--night);color:var(--ink);font-family:var(--font);display:flex;align-items:center;justify-content:center;padding:max(12px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 12px max(16px,env(safe-area-inset-left,0px));-webkit-font-smoothing:antialiased}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit;padding:0}
+button:focus-visible,a:focus-visible{outline:3px solid var(--lamp);outline-offset:3px}
+
+.lobby{position:relative;width:min(100%,1200px,calc((100vh - 24px) * 16 / 9));aspect-ratio:16/9;border-radius:18px;overflow:hidden;
+  background:url(assets/bg_street.jpg) center 78%/cover no-repeat,#8fc3e6;box-shadow:0 0 0 4px var(--navy),0 0 0 8px var(--lamp),0 20px 50px rgba(0,0,0,.45);
+  container-type:inline-size}
+.lobby:before{content:"";position:absolute;inset:auto 0 0 0;height:30%;background:linear-gradient(transparent,rgba(31,58,95,.28))}
+.lobby:after{content:"";position:absolute;left:0;right:0;top:0;height:22%;background:linear-gradient(rgba(255,255,255,.18),transparent);pointer-events:none}
+
+/* 위쪽 상태 바 */
+.topbar{position:absolute;z-index:3;left:2.2%;right:2.2%;top:3%;height:10.5%;background:var(--navy);border-radius:999px;display:flex;align-items:center;gap:1.4cqw;padding:0 1cqw 0 2.2cqw;box-shadow:0 0 0 3px #fff3,0 6px 0 rgba(0,0,0,.18)}
+.brand{display:flex;align-items:center;gap:1cqw;color:#fff;font-weight:900;font-size:3.1cqw;letter-spacing:-.03em;margin-right:auto}
+.brand img{height:4.6cqw}
+.stat{display:flex;align-items:center;gap:.8cqw;height:72%;padding:0 1.6cqw 0 .8cqw;border-radius:999px;background:#ffffff14;box-shadow:inset 0 0 0 2px #ffffff30;color:#dfe6f2;font-size:1.35cqw;font-weight:700;white-space:nowrap}
+.stat img{height:72%}
+.stat b{color:var(--lamp);font-size:2.2cqw;font-weight:800;font-variant-numeric:tabular-nums}
+.gear{width:6.2cqw;height:6.2cqw;max-height:86%;border-radius:50%;background:var(--navy-2);box-shadow:0 0 0 3px var(--lamp);display:grid;place-items:center;color:#fff}
+.gear svg{width:55%;height:55%}
+
+/* 왼쪽 메뉴 */
+.side{position:absolute;z-index:3;left:2.6%;top:20%;display:flex;flex-direction:column;gap:1.6cqw}
+.tile{width:9.6cqw;height:8.8cqw;background:var(--paper);border-radius:1.6cqw;box-shadow:0 0 0 3px var(--navy),0 .6cqw 0 var(--navy);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4cqw;font-weight:800;font-size:1.25cqw;line-height:1.2;color:var(--navy);text-align:center;transition:transform .12s}
+.tile:hover{transform:translateY(-3px)}
+.tile img,.tile svg{height:3.6cqw;width:auto}
+.tile small{display:block;font-size:1.15cqw}
+
+/* 가운데 우체부 + 말풍선 */
+.hero{position:absolute;z-index:2;left:43%;bottom:26%;height:36%;aspect-ratio:127.67/200;background:url(assets/player_sheet.png) 0 0/600% 100% no-repeat;animation:bob 1.6s ease-in-out infinite;filter:drop-shadow(0 .6cqw 0 rgba(0,0,0,.12))}
+.hero.go{animation:run .4s steps(4) infinite,dash 1s ease-in forwards}
+@keyframes bob{50%{transform:translateY(-3%)}}
+@keyframes run{from{background-position-x:0%}to{background-position-x:80%}}
+@keyframes dash{to{transform:translateX(160%)}}
+.shadow{position:absolute;z-index:1;left:43.6%;bottom:25%;width:9%;height:2.4%;border-radius:50%;background:rgba(31,58,95,.25)}
+.post{position:absolute;z-index:2;left:60%;bottom:25.5%;height:20%}
+.title{position:absolute;z-index:3;left:50%;top:13.5%;transform:translateX(-50%);margin:0;width:25cqw;filter:drop-shadow(0 .5cqw 0 rgba(31,58,95,.18))}
+.title img{width:100%;height:auto;display:block}
+.bubble{position:absolute;z-index:3;left:57%;top:37%;max-width:19%;background:#fff;border-radius:2.4cqw;padding:1.2cqw 1.8cqw;font-weight:800;font-size:1.75cqw;line-height:1.4;text-align:center;color:var(--ink);box-shadow:0 0 0 3px var(--navy),0 .5cqw 0 rgba(31,58,95,.25)}
+.bubble:after{content:"";position:absolute;left:18%;bottom:-1.4cqw;border:1.4cqw solid transparent;border-top-color:#fff;border-bottom:0;filter:drop-shadow(0 3px 0 var(--navy))}
+.bubble em{font-style:normal;color:var(--red)}
+
+/* 오른쪽 오늘의 이웃 */
+.today{position:absolute;z-index:3;right:2.4%;top:17%;width:23%;background:var(--paper);border-radius:2cqw;box-shadow:0 0 0 3px var(--navy),0 .7cqw 0 var(--navy);overflow:hidden}
+.today h2{margin:0;background:var(--lamp);color:var(--navy);font-size:1.9cqw;font-weight:900;padding:1cqw 1.6cqw;display:flex;align-items:center;gap:.6cqw}
+.today h2 img{height:2.4cqw}
+.ppl{display:flex;flex-direction:column;gap:1cqw;padding:1.2cqw}
+.nb{display:flex;align-items:center;gap:1.2cqw;background:#fff;border-radius:1.2cqw;padding:.9cqw;box-shadow:inset 0 0 0 2px #e3d7c1;text-align:left;width:100%}
+.nb img.av{width:5.6cqw;height:5.6cqw;border-radius:.9cqw;background:#e3eaf3;object-fit:cover}
+.nb b{display:block;font-size:1.8cqw;font-weight:900}
+.nb span{display:flex;align-items:center;gap:.3cqw;font-size:1.3cqw;color:var(--muted)}
+.nb span img{height:1.5cqw}
+.nb small{display:block;font-size:1.1cqw;color:#3b8a60;font-weight:700}
+.nb.sealed{text-decoration:none;justify-content:center;height:7.4cqw;padding:0;border:.5cqw solid transparent;background:linear-gradient(#fbf3e3,#fbf3e3) padding-box,repeating-linear-gradient(135deg,var(--red) 0 .8cqw,#fff .8cqw 1.2cqw,var(--blue) 1.2cqw 2cqw,#fff 2cqw 2.4cqw) border-box;box-shadow:none;position:relative}
+.nb.sealed:before{content:"";position:absolute;inset:0;background:linear-gradient(to top right,transparent calc(50% - 1px),#d8cbb2 50%,transparent calc(50% + 1px)),linear-gradient(to top left,transparent calc(50% - 1px),#d8cbb2 50%,transparent calc(50% + 1px))}
+.nb .seal{display:grid;color:#fff;}
+.seal{position:relative;width:4cqw;height:4cqw;border-radius:50%;background:var(--red);color:#fff;font-weight:900;font-size:2.2cqw;display:grid;place-items:center;box-shadow:0 0 0 .3cqw #a8341f}
+
+/* 아래 큰 버튼 */
+.cta{position:absolute;z-index:3;left:50%;transform:translateX(-50%);bottom:5.5%;display:flex;gap:2cqw;width:66%}
+.big{flex:1;height:10cqw;white-space:nowrap;border-radius:999px;display:flex;align-items:center;gap:1.4cqw;padding:0 1.4cqw 0 2.4cqw;color:#fff;font-weight:900;font-size:2.9cqw;letter-spacing:-.02em;text-decoration:none;transition:transform .12s}
+.big:hover{transform:translateY(-3px)}
+.big:active{transform:translateY(2px)}
+.big .ic{height:72%;aspect-ratio:1;flex:0 0 auto;display:grid;place-items:center;border-right:2px solid #ffffff55;padding-right:1.2cqw}
+.big .ic img{max-height:100%;max-width:100%}
+.mini-hero{display:block;height:100%;aspect-ratio:127.67/200;background:url(assets/player_sheet.png) 0 0/600% 100% no-repeat;animation:run .5s steps(4) infinite}
+.big .tx{flex:1;text-align:left}
+.big .tx small{display:block;font-size:1.2cqw;font-weight:700;opacity:.9;letter-spacing:0}
+.big .ar{width:5.4cqw;height:5.4cqw;border-radius:50%;background:#fff;color:inherit;display:grid;place-items:center;font-size:2.6cqw;font-weight:900}
+.big.run{flex:1.15;background:var(--red);box-shadow:inset 0 0 0 .45cqw #fff,0 0 0 .4cqw var(--navy),0 .9cqw 0 #8e2c1a}
+.big.run .tx b{color:var(--lamp)}
+.big.run .ar{color:var(--red)}
+.big.card{background:var(--blue);box-shadow:inset 0 0 0 .45cqw #fff,0 0 0 .4cqw var(--navy),0 .9cqw 0 #1d3f7a}
+.big.card .ar{color:var(--blue)}
+.vp{position:absolute;z-index:3;right:2%;bottom:3%;background:#fbf3e3e6;border-radius:999px;padding:.4cqw 1.4cqw;font-size:1.15cqw;font-weight:700;color:var(--muted)}
+
+/* 모달 (단서 도감 · 제보 방법 · 도움말 · 설정) */
+.modal{position:absolute;inset:0;z-index:9;background:rgba(15,18,32,.62);display:flex;align-items:center;justify-content:center;padding:3%}
+.sheet{background:var(--paper);border-radius:16px;width:min(680px,100%);max-height:100%;overflow:auto;padding:20px 22px;display:flex;flex-direction:column;gap:12px;box-shadow:0 0 0 4px var(--navy),0 18px 40px rgba(0,0,0,.35)}
+.sheet h3{margin:0;font-size:22px;font-weight:900;color:var(--navy);display:flex;align-items:center;gap:8px}
+.sheet h3 small{font-size:14px;color:var(--muted);font-weight:700;margin-left:auto}
+.sheet p{margin:0;font-size:15px;line-height:1.6}
+.x{margin-left:8px;width:34px;height:34px;border-radius:50%;background:var(--paper-2);font-size:18px;font-weight:900;color:var(--navy);flex:0 0 auto}
+.dex{display:grid;gap:10px}
+.dex .row{display:grid;grid-template-columns:56px 1fr;gap:12px;align-items:center;background:#fff;border-radius:12px;padding:10px;box-shadow:inset 0 0 0 2px #e3d7c1}
+.dex .row img.av{width:56px;height:56px;border-radius:10px;background:#e3eaf3;object-fit:cover}
+.dex b{font-size:17px}
+.dex .meta{font-size:13px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+.chips span{display:inline-flex;align-items:center;gap:4px;background:var(--paper-2);border-radius:999px;padding:3px 10px;font-size:14px;font-weight:700}
+.chips span img{width:18px;height:18px}
+.chips span.no{background:transparent;box-shadow:inset 0 0 0 1.5px #c9bda7;color:#a59a88;font-weight:500}
+.call{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.call div{background:#fff;border-radius:12px;padding:12px;text-align:center;box-shadow:inset 0 0 0 2px #e3d7c1}
+.call strong{display:block;font-size:34px;font-weight:900;color:var(--red);line-height:1.1;user-select:all;-webkit-user-select:all}
+.call span{font-size:14px;color:var(--muted)}
+.steps3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.steps3 div{background:#fff;border-radius:12px;padding:10px;box-shadow:inset 0 0 0 2px #e3d7c1;font-size:14px;line-height:1.5}
+.steps3 b{display:block;font-size:16px;color:var(--navy)}
+.steps3 img{height:34px}
+.tog{display:flex;align-items:center;justify-content:space-between;background:#fff;border-radius:12px;padding:12px 14px;font-size:16px;font-weight:700;box-shadow:inset 0 0 0 2px #e3d7c1}
+.tog input{width:22px;height:22px;accent-color:var(--red)}
+.btn{align-self:flex-start;background:var(--red);color:#fff;font-weight:800;border-radius:10px;padding:10px 18px}
+.btn.ghost{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 2px var(--ink)}
+
+/* 좁은 화면: 위에서 아래로 쌓기 */
+@media (max-width:760px){
+  body{align-items:flex-start}
+  .lobby{aspect-ratio:auto;width:100%;container-type:normal;display:flex;flex-direction:column;gap:14px;padding:14px;background-position:center bottom}
+  .topbar,.side,.today,.cta,.vp,.bubble,.hero,.post,.shadow{position:static;transform:none}
+  .topbar{height:auto;flex-wrap:wrap;border-radius:16px;padding:10px 12px;gap:8px}
+  .brand{font-size:22px;gap:8px}.brand img{height:30px}
+  .stat{height:auto;font-size:12px;padding:4px 10px 4px 6px;gap:6px}.stat img{height:20px}.stat b{font-size:16px}
+  .gear{width:38px;height:38px}
+  .scene{position:relative;height:250px}
+  .scene .hero{position:absolute;left:30%;bottom:6px;height:170px}
+  .scene .shadow{position:absolute;left:31%;bottom:2px;width:80px;height:12px}
+  .scene .post{position:absolute;left:62%;bottom:6px;height:100px}
+  .title{position:static;transform:none;width:78%;align-self:center;order:0}
+  .scene .bubble{position:absolute;left:4%;top:0;max-width:62%;font-size:15px;padding:8px 12px;border-radius:16px}
+  .bubble:after{border-width:10px;bottom:-10px}
+  .cta{width:100%;flex-direction:column;gap:12px;order:3}
+  .big,.big.run{flex:none;height:72px;font-size:24px;gap:12px;padding:0 10px 0 16px}
+  .big .ic{height:50px;width:50px;padding-right:10px;aspect-ratio:auto}.big .tx small{font-size:12px}.big .ar{width:44px;height:44px;font-size:20px}
+  .today{width:100%;order:4}.today h2{font-size:18px;padding:8px 14px}.today h2 img{height:22px}
+  .ppl{padding:10px;gap:8px}.nb{gap:10px;padding:8px;border-radius:12px}.nb img.av{width:48px;height:48px;border-radius:10px}
+  .nb b{font-size:17px}.nb span{font-size:13px}.nb span img{height:14px}.nb small{font-size:12px}.nb.sealed{height:64px;border-width:5px}.seal{width:36px;height:36px;font-size:20px}
+  .side{flex-direction:row;order:5;gap:10px}.tile{width:auto;flex:1;aspect-ratio:auto;padding:10px 4px;font-size:13px;border-radius:14px;box-shadow:0 0 0 3px var(--navy),0 4px 0 var(--navy)}.tile img,.tile svg{height:30px}.tile small{font-size:12px}
+  .vp{order:6;align-self:center;font-size:12px;padding:4px 12px}
+  .call strong{font-size:28px}.steps3{grid-template-columns:1fr}
+  .modal{position:fixed}
+}
+@media (prefers-reduced-motion:reduce){.hero{animation:none}.hero.go{animation:none}.tile,.big{transition:none}}
+/* 오프닝(스플래시) 화면 */
+.splash{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;
+  background:linear-gradient(rgba(143,195,230,.55),rgba(251,243,227,.85)),url(assets/bg_street.jpg) center bottom/cover no-repeat,#8fc3e6;transition:opacity .5s;cursor:pointer}
+.splash.out{opacity:0;pointer-events:none}
+.splash img{width:min(560px,78vw);height:auto;animation:pop .8s cubic-bezier(.2,1.4,.4,1) both;filter:drop-shadow(0 10px 0 rgba(31,58,95,.18))}
+@keyframes pop{0%{transform:scale(.6) translateY(20px);opacity:0}100%{transform:none;opacity:1}}
+.splash .bar{width:min(360px,64vw);height:14px;border-radius:999px;background:#fff;box-shadow:0 0 0 3px var(--navy);overflow:hidden}
+.splash .bar i{display:block;height:100%;width:0;background:var(--lamp);border-radius:999px;transition:width .2s}
+.splash p{margin:0;font-weight:800;font-size:18px;color:var(--navy)}
+.splash .tap{animation:blink 1.1s ease-in-out infinite}
+@keyframes blink{50%{opacity:.35}}
+.splash small{position:absolute;bottom:18px;font-size:13px;color:var(--muted);font-weight:700}
+@media (prefers-reduced-motion:reduce){.splash img,.splash .tap{animation:none}}
+</style>
+
+<div class="splash" id="splash" role="button" tabindex="0" aria-label="함께찾기 시작하기">
+  <img src="assets/game_logo.png" alt="함께찾기 FIND TOGETHER">
+  <div class="bar"><i id="splashBar"></i></div>
+  <p id="splashMsg">우리 동네 이웃 정보를 불러오는 중…</p>
+  <small>가상 인물로 체험하는 시제품입니다</small>
+</div>
+<main class="lobby" id="lobby">
+  <header class="topbar">
+    <div class="brand"><img src="assets/logo.png" alt="">함께찾기</div>
+    <div class="stat" title="두 게임에서 모은 나의 활동 점수"><img src="assets/silver.png" alt="">내 활동 점수 <b id="stScore">0</b></div>
+    <div class="stat" title="두 게임에서 기억한 이웃의 특징 수"><img src="assets/letter.png" alt="">모은 단서 <b><span id="stClues">0</span> / <span id="stTotal">0</span></b></div>
+    <button class="gear" id="btnGear" aria-label="설정"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.5 7.5 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.3 7.3 0 0 0-1.7-1L15 3.5h-4l-.4 2.5a7.3 7.3 0 0 0-1.7 1l-2.4-1-2 3.4 2 1.6a7.5 7.5 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.3 7.3 0 0 0 1.7 1l.4 2.5h4l.4-2.5a7.3 7.3 0 0 0 1.7-1l2.4 1 2-3.4zM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg></button>
+  </header>
+
+  <nav class="side" aria-label="메뉴">
+    <button class="tile" id="btnDex"><img src="assets/sub_english.png" alt="">단서 도감</button>
+    <button class="tile" id="btnCall"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#d4472d" d="M6.6 10.8a15 15 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1z"/><path d="M15 4.5a5 5 0 0 1 4.5 4.5M15 1.5a8 8 0 0 1 7.5 7.5" stroke="#d4472d" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>제보 방법<small>112 · 182</small></button>
+    <button class="tile" id="btnHelp"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#2f63b8"/><path d="M9.3 9.2a2.8 2.8 0 1 1 3.9 2.6c-.8.4-1.2.9-1.2 1.7v.6" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round"/><circle cx="12" cy="17.3" r="1.3" fill="#fff"/></svg>도움말</button>
+  </nav>
+
+  <h1 class="title"><img src="assets/game_logo.png" alt="함께찾기 FIND TOGETHER"></h1>
+  <div class="scene">
+    <p class="bubble" id="bubble">오늘 우리 동네<br>이웃 <em>3명</em>이 기다려요</p>
+    <div class="shadow"></div>
+    <div class="hero" id="hero" role="img" aria-label="함께찾기 우체부"></div>
+    <img class="post" src="assets/postbox.png" alt="">
+  </div>
+
+  <aside class="today" aria-label="오늘의 이웃">
+    <h2><img src="assets/pin.png" alt="">오늘의 이웃</h2>
+    <div class="ppl" id="ppl"></div>
+  </aside>
+
+  <div class="cta">
+    <a class="big run" id="goRun" href="run.html"><span class="ic"><i class="mini-hero"></i></span><span class="tx"><b>RUN</b> 달리기<small>달리며 이웃의 특징 알기</small></span><span class="ar">›</span></a>
+    <a class="big card" id="goCard" href="card.html"><span class="ic"><img src="assets/sub_card.png" alt=""></span><span class="tx">카드 분류<small>분류하며 기억 다지기</small></span><span class="ar">›</span></a>
+  </div>
+  <div class="vp">가상 인물 시제품</div>
+
+  <!-- 모달 -->
+  <div class="modal" id="mDex" hidden><div class="sheet" role="dialog" aria-labelledby="tDex">
+    <h3 id="tDex"><img src="assets/sub_english.png" alt="" style="height:28px">단서 도감 <small id="dexCount"></small><button class="x" data-close aria-label="닫기">✕</button></h3>
+    <p>두 게임에서 모은 이웃의 특징이에요. 아직 모르는 단서는 게임에서 찾을 수 있어요.</p>
+    <div class="dex" id="dexList"></div>
+  </div></div>
+  <div class="modal" id="mCall" hidden><div class="sheet" role="dialog" aria-labelledby="tCall">
+    <h3 id="tCall">이웃을 목격했다면?<button class="x" data-close aria-label="닫기" style="margin-left:auto">✕</button></h3>
+    <div class="call"><div><strong>112</strong><span>경찰</span></div><div><strong>182</strong><span>실종아동찾기센터</span></div></div>
+    <p><b>본 장소 · 시간 · 옷차림</b>을 알려 주세요. 직접 찾아 나서거나 따라가지 말고 바로 신고해 주세요. 함께찾기는 제보를 직접 받지 않고 공식 창구로 연결합니다.</p>
+  </div></div>
+  <div class="modal" id="mHelp" hidden><div class="sheet" role="dialog" aria-labelledby="tHelp">
+    <h3 id="tHelp">함께찾기는 이렇게 해요<button class="x" data-close aria-label="닫기" style="margin-left:auto">✕</button></h3>
+    <div class="steps3">
+      <div><img src="assets/gold.png" alt=""><b>① 알기 · RUN</b>실종 이웃이 사는 동네를 달리며 금색 코인으로 특징을 하나씩 알아요.</div>
+      <div><img src="assets/sub_card.png" alt=""><b>② 기억 · 카드</b>공부 카드와 이웃 우편물을 함께 분류하며 특징을 다시 기억해요.</div>
+      <div><img src="assets/postbox.png" alt=""><b>③ 연결 · 제보</b>비슷한 분을 보면 112 · 182 공식 창구로 바로 알려요.</div>
+    </div>
+    <p>점수는 나의 활동 기록일 뿐이고, 이웃에게는 점수를 매기지 않아요. 이웃이 집으로 돌아가면 카드는 바로 내려가요.</p>
+    <p style="font-size:13px;color:var(--muted)">현재는 가상 인물로 체험하는 시제품입니다. 실제 서비스에서는 경찰청이 공개한 실종 정보만 사용합니다.</p>
+  </div></div>
+  <div class="modal" id="mGear" hidden><div class="sheet" role="dialog" aria-labelledby="tGear" style="width:min(420px,100%)">
+    <h3 id="tGear">설정<button class="x" data-close aria-label="닫기" style="margin-left:auto">✕</button></h3>
+    <label class="tog">효과음 <input type="checkbox" id="setSound"></label>
+    <label class="tog">단서 읽어주기 (RUN) <input type="checkbox" id="setVoice"></label>
+    <button class="btn ghost" id="btnReset">내 기록 지우기</button>
+  </div></div>
+</main>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const AS = 'assets/';
+  // 가상 인물 예시 (두 게임과 같은 이웃)
+  let PEOPLE = [
+    { name:'박○자', age:80, sex:'여', area:'동대문구 답십리동', clues:[{t:'지팡이'},{t:'붉은색 상의'},{t:'키 167cm'},{t:'백발 단발머리'},{i:'📍',t:'동대문구 답십리동'}] },
+    { name:'김○수', age:9, sex:'남', area:'중랑구 면목동', clues:[{t:'노란 우비'},{t:'파란 운동화'},{t:'키 130cm'},{t:'공룡 그림 가방'},{i:'📍',t:'중랑구 면목동'}] },
+    { name:'이○호', age:76, sex:'남', area:'동대문구 장안동', clues:[{t:'회색 모자'},{t:'남색 점퍼'},{t:'백발 짧은머리'},{t:'검정 운동화'},{t:'키 172cm'}] },
+  ];
+  const CLUE_ICONS = [
+    [/지팡이/, 'cane'], [/모자/, 'cap'], [/가방|배낭|백팩/, 'bag'], [/운동화|신발|구두|슬리퍼|샌들|부츠/, 'shoes'],
+    [/점퍼|우비|외투|코트|패딩|후드|자켓|재킷|조끼|가디건/, 'outer'], [/바지|하의|치마|반바지/, 'pants'],
+    [/상의|셔츠|티|러닝|블라우스|니트|원피스|착의/, 'top'], [/키\s?\d|cm/, 'height'], [/머리|백발|단발|파마|대머리/, 'hair'],
+    [/얼굴/, 'face'], [/체격|마른|보통|뚱뚱|건장|왜소/, 'build'], [/(동|읍|면|리|구|군|시)$/, 'pin'],
+  ];
+  const clueIcon = c => { if (c.i === '📍') return 'pin'; for (const [re, k] of CLUE_ICONS) if (re.test(c.t)) return k; return 'pin'; };
+  const npcFor = p => `${AS}${p.age < 14 ? 'npc_child' : p.age >= 60 && String(p.sex).startsWith('여') ? 'npc_elder' : 'npc_adult'}.png`;
+  const avatar = p => p.photo || npcFor(p);
+  const dong = p => p.area.split(' ').slice(-1)[0];
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+  // 두 게임이 함께 쓰는 기록 (이 브라우저에만 저장)
+  const store = { get(k){ try { return localStorage.getItem(k); } catch(e) { return null; } }, set(k, v){ try { localStorage.setItem(k, v); } catch(e) {} }, del(k){ try { localStorage.removeItem(k); } catch(e) {} } };
+  const stats = () => { try { return JSON.parse(store.get('hc_stats')) || {}; } catch(e) { return {}; } };
+
+  function render(){
+    const s = stats(), met = s.met || [], got = s.clues || {};
+    const total = PEOPLE.reduce((a, p) => a + p.clues.length, 0);
+    const have = PEOPLE.reduce((a, p) => a + p.clues.filter(c => (got[p.name] || []).includes(c.t)).length, 0);
+    $('stScore').textContent = (s.score || 0).toLocaleString('ko-KR');
+    $('stClues').textContent = have; $('stTotal').textContent = total;
+    const left = PEOPLE.filter(p => !met.includes(p.name)).length;
+    $('bubble').innerHTML = left
+      ? `오늘 우리 동네<br>이웃 <em>${left}명</em>이 기다려요`
+      : `이웃 ${PEOPLE.length}명을 모두 만났어요<br>카드로 <em>한 번 더</em> 기억해요`;
+    $('ppl').innerHTML = PEOPLE.slice(0, 3).map(p => met.includes(p.name)
+      ? `<button class="nb" data-dex><img class="av" src="${avatar(p)}" alt=""><div><b>${esc(p.name)} 님</b><span><img src="${AS}pin.png" alt="">${esc(dong(p))}</span><small>단서 ${p.clues.filter(c => (got[p.name] || []).includes(c.t)).length} / ${p.clues.length}</small></div></button>`
+      : `<a class="nb sealed" href="${$('goRun').getAttribute('href')}" aria-label="아직 만나지 않은 이웃 · RUN에서 만나요"><span class="seal">?</span></a>`).join('');
+    $('dexCount').textContent = `모은 단서 ${have} / ${total}`;
+    $('dexList').innerHTML = PEOPLE.map(p => {
+      const g = got[p.name] || [];
+      return `<div class="row"><img class="av" src="${avatar(p)}" alt=""><div><b>${esc(p.name)} 님</b> <span class="meta">${esc(p.sex)} · ${esc(p.age)}세 · ${esc(dong(p))}</span>
+        <div class="chips">${p.clues.map(c => g.includes(c.t) ? `<span><img src="${AS}${clueIcon(c)}.png" alt="">${esc(c.t)}</span>` : '<span class="no">? 아직 모르는 단서</span>').join('')}</div></div></div>`;
+    }).join('');
+  }
+
+  // 모달 열고 닫기
+  const open = id => { $(id).hidden = false; $(id).querySelector('[data-close]').focus(); };
+  document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m || e.target.closest('[data-close]')) m.hidden = true; }));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelectorAll('.modal').forEach(m => m.hidden = true); });
+  $('btnDex').onclick = () => open('mDex');
+  $('ppl').addEventListener('click', e => { if (e.target.closest('[data-dex]')) open('mDex'); });
+  $('btnCall').onclick = () => open('mCall');
+  $('btnHelp').onclick = () => open('mHelp');
+  $('btnGear').onclick = () => { $('setSound').checked = store.get('hc_sound') !== '0'; $('setVoice').checked = store.get('hc_voice') !== '0'; open('mGear'); };
+  $('setSound').onchange = e => store.set('hc_sound', e.target.checked ? '1' : '0');
+  $('setVoice').onchange = e => store.set('hc_voice', e.target.checked ? '1' : '0');
+  $('btnReset').onclick = () => { store.del('hc_stats'); render(); $('mGear').hidden = true; };
+
+  // RUN 버튼: 우체부가 달려 나간 뒤 이동
+  $('goRun').addEventListener('click', e => {
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    e.preventDefault(); const href = e.currentTarget.href;
+    $('hero').classList.add('go'); setTimeout(() => location.href = href, 650);
+  });
+
+  // 내부 시연 서버(server.py)에서는 실제 이웃 정보와 서버 경로를 씀
+  if (window.__PEOPLE_URL) {
+    $('goRun').setAttribute('href', '/'); $('goCard').setAttribute('href', '/card');
+    fetch(window.__PEOPLE_URL + '?reuse=1').then(r => r.json()).then(d => { if (d.people && d.people.length) { PEOPLE = d.people; render(); } }).catch(() => {});
+  }
+  // 발표 캡처용: #shot-home2 는 이웃 두 명을 만난 상태
+  if (location.hash === '#shot-home2') store.set('hc_stats', JSON.stringify({ score:1340, met:['박○자','김○수'], clues:{'박○자':['지팡이','붉은색 상의','키 167cm','백발 단발머리'],'김○수':['노란 우비','파란 운동화','키 130cm']} }));
+  if (location.hash === '#shot-home') store.del('hc_stats');
+  // 오프닝: 로고 → 불러오기 막대 → 화면을 누르면 홈으로 (한 번 본 뒤에는 이 탭에서 다시 나오지 않음)
+  (function splash(){
+    const el = $('splash'), bar = $('splashBar'), msg = $('splashMsg');
+    let seen = false; try { seen = sessionStorage.getItem('hc_splash') === '1'; } catch(e) {}
+    const shot = location.hash.startsWith('#shot-');
+    if ((seen || shot) && location.hash !== '#shot-splash') { el.remove(); return; }
+    let k = 0, ready = false;
+    const t = setInterval(() => {
+      k = Math.min(100, k + 7 + Math.random() * 9); bar.style.width = k + '%';
+      if (k >= 100) { clearInterval(t); ready = true; msg.textContent = '화면을 눌러 시작하세요'; msg.classList.add('tap'); }
+    }, 120);
+    const go = () => { if (!ready || location.hash === '#shot-splash') return; try { sessionStorage.setItem('hc_splash', '1'); } catch(e) {} el.classList.add('out'); setTimeout(() => el.remove(), 550); };
+    el.addEventListener('click', go);
+    el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+    el.focus();
+  })();
+  window.addEventListener('pageshow', render);
+  render();
+})();
+</script>

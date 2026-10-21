@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: hamkke-chatgi
+    runtime: static
+    buildCommand: ""
+    staticPublishPath: .
