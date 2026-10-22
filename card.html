@@ -313,7 +313,7 @@ a.yel{display:inline-flex;align-items:center;gap:6px;background:var(--lamp);colo
     </div>
   </section>
 
-  <p class="note" id="footNote">현재는 가상 인물로 체험하는 시제품입니다. 실제 서비스에서는 경찰청이 공개한 실종 정보만 사용합니다.</p>
+  <p class="note" id="footNote" style="display:none"></p>
 </div>
 
 <div class="overlay" id="ovClear" hidden>
@@ -332,7 +332,7 @@ a.yel{display:inline-flex;align-items:center;gap:6px;background:var(--lamp);colo
       <a class="yel" id="toRun" href="run.html">함께찾기 RUN 해보기 →</a>
       <button class="sub dark" id="btnReport">이웃을 목격했다면? 제보 방법</button>
     </div>
-    <p class="note ctr" id="clearNote">현재는 가상 인물로 체험하는 시제품입니다. 실제 서비스에서는 경찰청이 공개한 실종 정보만 사용합니다.<br>사진 자리에는 실제 서비스에서 경찰청이 공개한 사진이 들어갑니다. 장소는 동 단위까지만 표시합니다.</p>
+    <p class="note ctr" id="clearNote" style="display:none"></p>
   </div>
 </div>
 
@@ -626,8 +626,8 @@ a.yel{display:inline-flex;align-items:center;gap:6px;background:var(--lamp);colo
     fetch(window.__PEOPLE_URL + '?reuse=1').then(r => r.json()).then(d => {
       if (!d.people || !d.people.length) throw new Error(d.error || 'no data');
       PEOPLE = d.people;
-      $('footNote').textContent = `내부 시연용 · 경찰청 실종경보 실제 데이터 (${d.collected_at} 기준) · [자료 출처: 경찰청] · 외부 배포 금지`;
-      $('clearNote').textContent = '사진과 정보는 경찰청 안전Dream 실종경보에서 받아 옵니다. 발견·해제되면 다음 실행부터 자동으로 빠집니다. 장소는 동 단위까지만 표시합니다.';
+      $('footNote').textContent = `내부 시연용 · 경찰청 실종경보 실제 데이터 (${d.collected_at} 기준) · [자료 출처: 경찰청] · 외부 배포 금지`; $('footNote').style.display = '';
+      $('clearNote').textContent = '사진과 정보는 경찰청 안전Dream 실종경보에서 받아 옵니다. 발견·해제되면 다음 실행부터 자동으로 빠집니다. 장소는 동 단위까지만 표시합니다.'; $('clearNote').style.display = '';
       $('toRun').href = $('toRunTop').href = '/'; $('toHomeTop').href = '/home';
     }).catch(() => {}).finally(() => { $('btnShuffle').disabled = false; boot(); });
   } else boot();

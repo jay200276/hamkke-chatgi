@@ -245,7 +245,7 @@ a.sub.big{display:inline-flex;align-items:center;color:var(--ink);box-shadow:ins
         </div>
         <div class="ctl"><span aria-hidden="true">👆</span><b>화면 누르기</b> 또는 <kbd>Space</kbd> · 점프 <small>(두 번까지)</small></div>
         <div class="btns center"><button class="main big" id="btnStart">시작하기 ›</button></div>
-        <p class="foot"><img src="assets/npc_adult.png" alt=""><span id="startNote">현재는 가상 인물로 체험하는 시제품입니다.<br>실제 서비스에서는 경찰청이 공개한 실종 정보만 사용합니다.</span></p>
+        <p class="foot" style="display:none"><img src="assets/npc_adult.png" alt=""><span id="startNote"></span></p>
       </div>
     </div>
 
@@ -258,7 +258,7 @@ a.sub.big{display:inline-flex;align-items:center;color:var(--ink);box-shadow:ins
         </div>
         <div class="goldline"><img src="assets/gold.png" alt=""><span>금색 코인 <b id="briefCount">5</b>개를 모으면 단서 <b id="briefCount2">5</b>개가 열려요.</span><span class="coins" id="briefCoins"></span></div>
         <div class="infoline"><img src="assets/letter.png" alt="">도착하면 이웃의 부탁 카드에서 특징을 다시 확인해요. 놓친 단서도 모두 보여 드려요.</div>
-        <div class="brief-foot"><button class="main big" id="btnGo">출발하기 ›</button><span class="note">현재는 가상 인물로 체험하는 시제품입니다.</span></div>
+        <div class="brief-foot"><button class="main big" id="btnGo">출발하기 ›</button></div>
       </div>
     </div>
 
@@ -275,7 +275,7 @@ a.sub.big{display:inline-flex;align-items:center;color:var(--ink);box-shadow:ins
             <ul class="clist" id="cardClues"></ul>
           </div>
         </div>
-        <p class="note" id="cardNote">사진 자리에는 실제 서비스에서 경찰청이 공개한 사진이 들어갑니다. 실종 장소는 정확한 지점이 아니라 동 단위로만 보여 줍니다.</p>
+        <p class="note" id="cardNote" style="display:none"></p>
         <div class="report" id="reportBox" hidden>
           비슷한 분을 보셨다면 <strong>112</strong> (경찰) 또는 <strong>182</strong> (실종아동찾기센터)에 <b>본 장소 · 시간 · 옷차림</b>을 알려 주세요. 직접 찾아 나서거나 따라가지 말고 바로 신고해 주세요. 함께찾기는 제보를 직접 받지 않고 공식 창구로 연결합니다.
         </div>
@@ -293,17 +293,13 @@ a.sub.big{display:inline-flex;align-items:center;color:var(--ink);box-shadow:ins
         <div class="quiz" id="quiz"></div>
         <div class="endfoot">
           <div class="met"><b>오늘 만난 이웃</b><span class="chips2" id="endChips"></span></div>
-          <div class="sc">내 활동 점수 <b class="score" id="endScore">0</b>점 · 모은 단서 <b class="score" id="endClues">0</b>개<small>점수는 나의 활동 기록입니다. 이웃 카드에는 점수를 매기지 않으며, 이웃이 집으로 돌아가면 카드는 바로 내려갑니다.</small></div>
+          <div class="sc">내 활동 점수 <b class="score" id="endScore">0</b>점 · 모은 단서 <b class="score" id="endClues">0</b>개</div>
         </div>
         <div class="btns center"><button class="main big" id="btnAgain">↻ 다시 달리기</button><a class="sub big" id="toHome2" href="index.html">⌂ 홈</a><a class="sub big" id="toCard2" href="card.html">함께찾기 카드로 →</a></div>
       </div>
     </div>
   </div>
 
-  <div class="about">
-    <p><b>어떻게 만들었나</b></p>
-    <p>원작 「알로하 독립RUN」처럼 목숨이 무한해서 누구나 끝까지 달릴 수 있습니다. 은색 코인은 그대로 점수이고, 금색 코인 자리에 실종 공고의 인상착의를 넣었습니다. 단서는 경찰청 실종경보 정보와 실종 경보 문자에서 확인된 항목만 쓰고, 몸무게나 질환처럼 민감한 정보는 넣지 않습니다.</p>
-  </div>
 </div>
 
 <script>
@@ -361,8 +357,8 @@ a.sub.big{display:inline-flex;align-items:center;color:var(--ink);box-shadow:ins
     fetch(window.__PEOPLE_URL).then(r => r.json()).then(d => {
       if (!d.people || !d.people.length) throw new Error(d.error || '받은 실종 정보가 없습니다');
       PEOPLE = d.people;
-      $('startNote').textContent = `내부 시연용 · 경찰청 실종경보 실제 데이터 ${d.people.length}명 (${d.collected_at} 기준) · [자료 출처: 경찰청] · 외부 배포 금지`;
-      $('cardNote').textContent = '사진과 정보는 경찰청 안전Dream 실종경보에서 실행할 때마다 받아 옵니다. 발견·해제되면 다음 실행부터 자동으로 빠집니다. 실종 장소는 동 단위까지만 표시합니다.';
+      $('startNote').textContent = `내부 시연용 · 경찰청 실종경보 실제 데이터 ${d.people.length}명 (${d.collected_at} 기준) · [자료 출처: 경찰청] · 외부 배포 금지`; $('startNote').parentElement.style.display = '';
+      $('cardNote').textContent = '사진과 정보는 경찰청 안전Dream 실종경보에서 실행할 때마다 받아 옵니다. 발견·해제되면 다음 실행부터 자동으로 빠집니다. 실종 장소는 동 단위까지만 표시합니다.'; $('cardNote').style.display = '';
       $('toCard').href = $('toCard2').href = '/card'; $('toHome').href = $('toHome2').href = '/home';
       btn.disabled = false; btn.textContent = '시작하기 ›';
       renderSlots();
