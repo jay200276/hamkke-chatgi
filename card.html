@@ -287,7 +287,7 @@ a.yel{display:inline-flex;align-items:center;gap:6px;background:var(--lamp);colo
         <button id="lvNormal" aria-pressed="true">보통</button>
         <button id="lvHard" aria-pressed="false">어려움</button>
       </div>
-      <button class="sub" id="btnSubject" style="padding:6px 12px;font-size:14px">과목: <b id="subjName">-</b></button>
+      <button class="sub" id="btnSubject" hidden style="padding:6px 12px;font-size:14px">과목: <b id="subjName">-</b></button>
       <label class="toggles" for="optSound"><input type="checkbox" id="optSound" checked> 효과음</label>
       <a class="runlink" id="toRunTop" href="run.html">함께찾기 RUN으로 →</a><a class="runlink" id="toHomeTop" href="index.html">⌂ 홈</a>
     </div>
@@ -456,7 +456,6 @@ a.yel{display:inline-flex;align-items:center;gap:6px;background:var(--lamp);colo
     subject = b.dataset.subj; store.set('hc_subject', subject);
     $('ovSubject').hidden = true; beep(523, .06); setup();
   });
-  $('btnSubject').onclick = () => { clearInterval(memoT); openSubjects(); };
 
   // ---------- 판 구성: 학습 상자와 이웃 우편함을 섞어서 배치 ----------
   function setup(){
@@ -491,7 +490,7 @@ a.yel{display:inline-flex;align-items:center;gap:6px;background:var(--lamp);colo
     clearInterval(memoT);
     phase = 'sort'; $('btnShuffle').hidden = true; $('timer').hidden = true; $('table').hidden = false;
     $('tbadge').hidden = true; $('movesLeft').parentElement.hidden = false;
-    $('phase').innerHTML = '분류하기<small>아래 카드 한 장을 고른 뒤, 알맞은 우편함이나 상자를 누르세요</small>'; setStep(2);
+    $('phase').innerHTML = '분류하기<small>아래 카드 한 장을 고른 뒤, 알맞은 이웃의 우편함을 누르세요</small>'; setStep(2);
     if (!stacks.length) {
       const order = shuffle(cards.map(c => c.id));
       stacks = Array.from({ length: 4 }, () => []);
@@ -610,16 +609,14 @@ a.yel{display:inline-flex;align-items:center;gap:6px;background:var(--lamp);colo
     $('ovOut').hidden = true; moves += 5; phase = 'peek';
     renderCols(true); $('table').hidden = true;
     $('phase').innerHTML = '다시 보기<small>3초 뒤 이어서 분류해요</small>';
-    setTimeout(() => { phase = 'sort'; $('table').hidden = false; $('phase').innerHTML = '분류하기<small>아래 카드 한 장을 고른 뒤, 알맞은 우편함이나 상자를 누르세요</small>'; render(); }, 3000);
+    setTimeout(() => { phase = 'sort'; $('table').hidden = false; $('phase').innerHTML = '분류하기<small>아래 카드 한 장을 고른 뒤, 알맞은 이웃의 우편함을 누르세요</small>'; render(); }, 3000);
   };
   ['Easy','Normal','Hard'].forEach(k => $('lv' + k).onclick = () => {
     level = k.toLowerCase(); ['Easy','Normal','Hard'].forEach(j => $('lv' + j).setAttribute('aria-pressed', j === k)); if (subject) setup();
   });
 
   function boot(){
-    const saved = store.get('hc_subject');
-    $('subjName').textContent = saved && SUBJECTS[saved] ? SUBJECTS[saved].name : '-';
-    openSubjects();
+    subject = 'none'; setup();   // 학습 과목 없이 이웃 우편물만 분류
   }
   if (window.__PEOPLE_URL) {
     $('btnShuffle').disabled = true;
@@ -637,7 +634,7 @@ a.yel{display:inline-flex;align-items:center;gap:6px;background:var(--lamp);colo
     const s = location.hash.slice(6);
     $('optSound').checked = false;
     if (s !== 'card1') {
-      $('ovSubject').hidden = true; subject = 'english'; setup(); clearInterval(memoT);
+      $('ovSubject').hidden = true; subject = 'none'; setup(); clearInterval(memoT);
       $('timerBar').style.width = '62%';
       if (s === 'card3') {
         startSort();
